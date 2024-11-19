@@ -19,5 +19,5 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Test Deployement
-        uses: curl -I http://localhost:3000
+        run: curl -I http://localhost:3000
     
