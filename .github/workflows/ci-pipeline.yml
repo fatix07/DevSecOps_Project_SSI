@@ -19,37 +19,4 @@ jobs:
       - name: Run Docker Image
         run: docker run -d -p 3000:3000 --name juice-shop bkimminich/juice-shop
 
-  deploy:
-    needs: pull-and-run
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download ngrok
-        run: |
-          curl -s https://ngrok-agent.s3.amazonaws.com/ngrok.asc | sudo tee /etc/apt/trusted.gpg.d/ngrok.asc >/dev/null
-          echo "deb https://ngrok-agent.s3.amazonaws.com buster main" | sudo tee /etc/apt/sources.list.d/ngrok.list >/dev/null
-          sudo apt update
-          sudo apt install ngrok
-
-      - name: Authenticate ngrok
-        run: ngrok config add-authtoken ${{ secrets.NGROK_AUTH_TOKEN }}
-
-      - name: Expose Juice Shop with ngrok
-        run: |
-          nohup ngrok http 3000 > ngrok.log 2>&1 &
-          sleep 10
-          curl --silent http://127.0.0.1:4040/api/tunnels | jq -r .tunnels[0].public_url > juice_shop_url.txt
-
-      - name: Output Public URL
-        id: ngrok-url
-        run: |
-          echo "Juice Shop is available at:"
-          cat juice_shop_url.txt
-
-      - name: Save Public URL
-        id: save_url
-        run: echo "PUBLIC_URL=$(cat juice_shop_url.txt)" >> $GITHUB_ENV
-
-      - name: Notify Public URL
-        run: |
-          echo "Juice Shop is publicly accessible at $PUBLIC_URL"
+ 
