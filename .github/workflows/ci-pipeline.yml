@@ -1,0 +1,17 @@
+name: DevSecOps CI Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  pull-run-image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+      - name: Pull Docker Image
+        run: docker pull bkimminich/juice-shop
+      - name: Run Docker Image
+        run: docker run -d -p 3000:3000 bkimminich/juice-shop
