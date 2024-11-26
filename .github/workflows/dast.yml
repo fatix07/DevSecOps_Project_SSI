@@ -1,4 +1,4 @@
-name: Static Application Security Testing 
+name: Dynamic Application Security Testing
 on:
   push:
     branches:
