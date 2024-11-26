@@ -1,4 +1,4 @@
-name: SonarQube Analysis
+name: CI/CD Pipeline
 
 on:
   push:
@@ -6,36 +6,48 @@ on:
       - main
 
 jobs:
-  sonar-scan:
+  build-test-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the Repository
-      - name: Checkout Repository
-        uses: actions/checkout@v2
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
-      # Step 2: Setup Java
-      - name: Setup Java
-        uses: actions/setup-java@v3
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          java-version: '11'
-          distribution: 'temurin' # Specify JDK distribution
+          node-version: '16'
 
-      # Step 3: Cache SonarQube Scanner Dependencies (Optional)
-      - name: Cache SonarQube Scanner Dependencies
-        uses: actions/cache@v3
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
-          restore-keys: |
-            ${{ runner.os }}-sonar
+      - name: Install Dependencies
+        run: |
+          npm install
+          npm run build
 
-      # Step 4: Run SonarQube Scanner
-      - name: Run SonarQube Analysis
-        uses: SonarSource/sonarcloud-github-action@v2
-        with:
-          args: >
-            -Dsonar.projectKey=my_project_key
-            -Dsonar.organization=my_organization
-            -Dsonar.host.url=${{ secrets.SONAR_HOST_URL }}
-            -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+      - name: SonarQube Scan
+        env:
+          SONAR_HOST_URL: 'http://localhost:9000'
+          SONAR_LOGIN: ${{ secrets.SONAR_TOKEN }}
+        run: |
+          # Install SonarScanner
+          npm install -g sonar-scanner
+
+          # Run SonarScanner
+          sonar-scanner \
+            -Dsonar.projectKey=juice-shop \
+            -Dsonar.sources=. \
+            -Dsonar.host.url=$SONAR_HOST_URL \
+            -Dsonar.login=$SONAR_LOGIN
+
+      - name: Build Docker Image
+        run: |
+          docker build -t juice-shop:latest .
+
+
+      - name: Deploy Application
+        run: |
+          docker stop juice-shop || true
+          docker rm juice-shop || true
+          docker run -d -p 3000:3000 --name juice-shop juice-shop:latest
+          sleep 30
+
+
