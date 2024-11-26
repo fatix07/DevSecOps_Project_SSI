@@ -10,17 +10,27 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout Repository
+      # Step 1: Checkout the Repository
       - name: Checkout Repository
         uses: actions/checkout@v2
 
-      # Step 2: Setup Java (if required)
+      # Step 2: Setup Java
       - name: Setup Java
         uses: actions/setup-java@v3
         with:
           java-version: '11'
+          distribution: 'temurin' # Specify JDK distribution
 
-      # Step 3: Run SonarQube Scanner
+      # Step 3: Cache SonarQube Scanner Dependencies (Optional)
+      - name: Cache SonarQube Scanner Dependencies
+        uses: actions/cache@v3
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+          restore-keys: |
+            ${{ runner.os }}-sonar
+
+      # Step 4: Run SonarQube Scanner
       - name: Run SonarQube Analysis
         uses: SonarSource/sonarcloud-github-action@v2
         with:
