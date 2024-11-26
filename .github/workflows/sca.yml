@@ -1,0 +1,32 @@
+name: SCA Pipeline
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sca-scan:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Étape 1 : Récupérer le dépôt
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      # Étape 2 : Scanner les dépendances avec Trivy
+      - name: Install Trivy
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y wget
+          wget -qO- https://github.com/aquasecurity/trivy/releases/latest/download/trivy_$(uname -s)_$(uname -m).tar.gz | tar zxvf - -C /usr/local/bin
+
+      - name: Scan Dependencies with Trivy
+        run: trivy fs --scanners vuln . --format table --output trivy-report.txt
+
+      # Étape 3 : Téléverser le rapport d’analyse
+      - name: Upload SCA Report
+        uses: actions/upload-artifact@v3
+        with:
+          name: sca-report
+          path: trivy-report.txt
